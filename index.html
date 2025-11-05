@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bank Transactions Parser MVP</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="app-container">
+    <div class="header">
+      <h1>Bank Transactions Parser MVP</h1>
+    </div>
+
+    <div class="navbar">
+      <div class="nav-item active" id="tabAccounts" onclick="showView('accounts')">
+        Bank Accounts
+      </div>
+      <div class="nav-item" id="tabTransactions" onclick="showView('transactions')">
+        Transactions
+      </div>
+      <div class="nav-item" id="tabSettings" onclick="showView('settings')">
+        Settings
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Bank Accounts View -->
+      <div id="accountsView">
+        <h2 class="section-title">Bank Accounts</h2>
+        <p class="subtle-text">
+          Register all your bank accounts here. Click a row to select it as the active account.
+        </p>
+        <div id="accountsTableContainer"></div>
+
+        <h3 style="margin-top:20px;">Add New Bank Account</h3>
+        <form onsubmit="addAccount(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="bankAlias">Account Alias (optional)</label>
+              <input type="text" id="bankAlias" placeholder="e.g. Payroll Account" />
+            </div>
+            <div class="form-group">
+              <label for="bankName">Bank Name</label>
+              <input type="text" id="bankName" required />
+            </div>
+            <div class="form-group">
+              <label for="bankHolder">Account Holder Name</label>
+              <input type="text" id="bankHolder" required />
+            </div>
+            <div class="form-group">
+              <label for="bankNumber">Account Number</label>
+              <input type="text" id="bankNumber" required />
+            </div>
+            <div class="form-group">
+              <label for="bankCurrency">Currency</label>
+              <input type="text" id="bankCurrency" placeholder="e.g. S/, PEN, USD" />
+            </div>
+            <div class="form-group">
+              <label for="bankType">Account Type</label>
+              <input type="text" id="bankType" placeholder="e.g. Savings, Checking" />
+            </div>
+          </div>
+          <button type="submit">Save Bank Account</button>
+        </form>
+      </div>
+
+      <!-- Transactions View -->
+      <div id="transactionsView" style="display:none;">
+        <h2 class="section-title">Transactions</h2>
+        <p class="subtle-text">
+          Step 1: Select which bank account these transactions belong to, then paste the data below.
+        </p>
+
+        <div id="accountsTableContainerTx"></div>
+        <div id="selectedAccountInfo"></div>
+
+        <h3 style="margin-top:20px;">Paste Transaction Text</h3>
+        <textarea id="inputText" placeholder="Paste your transaction text here..."></textarea>
+        <br>
+        <button onclick="parseText()">Parse & Save</button>
+        <button class="secondary" onclick="clearTextBox()">Clear Text Box</button>
+        <button id="downloadBatchBtn" style="display:none;" onclick="downloadBatchJSON()">Download Current Batch</button>
+        <button id="downloadAllBtn" style="display:none;" onclick="downloadAllTransactionsForAccount()">Download All Transactions</button>
+        <span class="debug-toggle" onclick="toggleDebugPanel()">⚙️ Debug</span>
+        <div id="saveStatus" class="subtle-text" style="margin-top:6px;"></div>
+        <div id="integrityStatus"></div>
+        <div id="debugPanel"></div>
+
+        <h3 style="margin-top:20px;">Manage Stored Transactions</h3>
+        <button class="secondary" onclick="clearAllTransactionsForAccount()">Clear All</button>
+        <div style="margin-top:8px;">
+          <label class="subtle-text">
+            Start date:
+            <input type="date" id="clearStartDate">
+          </label>
+          <label class="subtle-text" style="margin-left:10px;">
+            End date:
+            <input type="date" id="clearEndDate">
+          </label>
+          <button class="secondary" onclick="clearTransactionsByDateRange()">Clear by Date Range</button>
+        </div>
+
+        <div id="outputSummary"></div>
+        <div id="output"></div>
+
+        <div id="duplicatesSection" style="display:none; margin-top:16px;">
+          <p class="subtle-text">Duplicates found in this session:</p>
+          <div id="duplicatesTable"></div>
+          <button id="downloadDuplicatesBtn" class="secondary" style="margin-top:8px; display:none;"
+                  onclick="downloadSkippedDuplicates()">Download Skipped Transactions</button>
+        </div>
+      </div>
+
+      <!-- Settings View -->
+      <div id="settingsView" style="display:none;">
+        <h2 class="section-title">Settings</h2>
+        <p class="subtle-text">
+          Use this section to update or remove bank accounts.
+        </p>
+
+        <div id="accountsTableContainerSettings"></div>
+
+        <div class="settings-section">
+          <h3>Update Selected Account</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="settingsAlias">Alias</label>
+              <input type="text" id="settingsAlias" />
+            </div>
+            <div class="form-group">
+              <label for="settingsBankName">Bank Name</label>
+              <input type="text" id="settingsBankName" />
+            </div>
+            <div class="form-group">
+              <label for="settingsHolder">Account Holder</label>
+              <input type="text" id="settingsHolder" />
+            </div>
+            <div class="form-group">
+              <label for="settingsNumber">Account Number (locked)</label>
+              <input type="text" id="settingsNumber" readonly />
+            </div>
+            <div class="form-group">
+              <label for="settingsCurrency">Currency</label>
+              <input type="text" id="settingsCurrency" />
+            </div>
+            <div class="form-group">
+              <label for="settingsType">Account Type</label>
+              <input type="text" id="settingsType" />
+            </div>
+          </div>
+          <button onclick="saveAccountUpdates()">Save Changes</button>
+          <div id="settingsUpdateStatus" class="subtle-text" style="margin-top:6px;"></div>
+        </div>
+
+        <div class="settings-section">
+          <h3>Remove Selected Account</h3>
+          <p class="subtle-text">This will delete the selected account and its transactions.</p>
+          <button class="secondary" onclick="deleteSelectedAccount()">Delete Selected Account</button>
+          <div id="settingsDeleteStatus" class="subtle-text" style="margin-top:6px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modular Scripts -->
+  <script src="js/storage.js"></script>
+  <script src="js/accounts.js"></script>
+  <script src="js/transactions.js"></script>
+  <script src="js/integrity.js"></script>
+  <script src="js/debug.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
