@@ -150,7 +150,7 @@ function parseText() {
   let detectedNormCurrency = null;
   let detectedRawCurrency = null;
 
-  const dateRegex = /([\wáéíóúüñÁÉÍÓÚÜÑ]{3,4}\.?\s+\d{1,2}\s+[\wáéíóúüñÁÉÍÓÚÜÑ]{3}\s+\d{2}:\d{2})\s*([A-Za-z$€¥\/]+)\s*([+-]?[0-9.,-]+)/i;
+  const dateRegex = /([\wáéíóúüñÁÉÍÓÚÜÑ]{3,4}\.? \d{1,2} [\wáéíóúüñÁÉÍÓÚÜÑ]{3} \d{2}:\d{2})\s*([A-Za-z$€¥\/\.\s]+)\s*([+-]?[0-9.,-]+)/i;
 
   for (let i = 0; i < lines.length - 1; i++) {
     const line = lines[i];

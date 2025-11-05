@@ -1,17 +1,17 @@
 // ---------------------------------------------------------
-// integrity.js — Integrity Self-Check Module
+// integrity.js — Integrity Self-Check Module (patched 2025-11)
 // ---------------------------------------------------------
 
 function runIntegritySelfCheck(rawText, parsedTransactions) {
   const statusEl = document.getElementById("integrityStatus");
   if (!statusEl) return { passed: true, counts: { detected: 0, parsed: 0 } };
 
-  // Count how many currency amounts appear in the raw text
-  const moneyPattern = /(?:S\/|USD|US\$|\$|€|¥)\s*[+-]?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})/gi;
+  // ✅ Updated pattern — now detects "S/." and "S/ " correctly
+  const moneyPattern = /(?:S\/\.?|USD|US\$|\$|€|¥)\s*[+-]?\d{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})/gi;
+
   const matches = rawText.match(moneyPattern);
   const detectedCount = matches ? matches.length : 0;
 
-  // Compare with parsed transactions count
   const parsedCount = parsedTransactions.length;
   const difference = detectedCount - parsedCount;
 
@@ -26,7 +26,6 @@ function runIntegritySelfCheck(rawText, parsedTransactions) {
     passed = false;
     message = `⚠️ Integrity check warning — Detected ${detectedCount} amounts, but only ${parsedCount} transactions were parsed. Missing ${difference}.`;
   } else {
-    // theoretically should not happen, but just in case
     passed = false;
     message = `⚠️ Integrity mismatch — Parsed more transactions (${parsedCount}) than detected amounts (${detectedCount}).`;
   }
